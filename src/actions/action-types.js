@@ -1,4 +1,3 @@
-export const TOGGLE_FLAG = 'TOGGLE_FLAG'
 export const TOGGLE_LOADING = 'TOGGLE_LOADING'
 export const GAMEOVER = 'GAMEOVER'
 export const CLEAR = 'CLEAR'

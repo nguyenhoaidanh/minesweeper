@@ -14,6 +14,19 @@ export class Welcome extends Component {
             />
           </div>
         </div>
+        <div className="row text-center mb-2">
+          <div className="col text-center">
+            Welcome to game{" "}
+            <a
+              href="https://vi.wikipedia.org/wiki/D%C3%B2_m%C3%ACn_(tr%C3%B2_ch%C6%A1i)"
+              target="_blank"
+            >
+              Minesweeper.
+            </a>
+            <br />
+            Let choose the level, and play the game
+          </div>
+        </div>
         <div className="row">
           <div className="col-12 text-center">
             <button

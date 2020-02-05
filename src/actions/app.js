@@ -2,7 +2,6 @@
  * Action để dispatch từ React
  */
 import {
-  TOGGLE_FLAG,
   GAMEOVER,
   CLEAR,
   SET_MINE_DATA,
@@ -26,12 +25,6 @@ export const getBoardMinesData = data => {
   };
 };
 
-export const toggleFlag = flagged => {
-  return {
-    type: TOGGLE_FLAG,
-    payload: { flagged }
-  };
-};
 
 export const toggleLoading = data => {
   return {

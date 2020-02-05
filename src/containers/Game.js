@@ -26,12 +26,9 @@ class Game extends Component {
       size: boardWidth,
       mines: bombNum
     });
-    this.setState({ timer: false });
-    this.resetTimer();
-  };
-  resetTimer = () => {
     clearInterval(window.timer);
-    this.setState({ timeSecond: 0 });
+    this.setState({ timer: false, timeSecond: 0 });
+    window.openCount = 0;
   };
   componentWillReceiveProps(props) {
     let data = this._initBoard(props.level, props.app.mines);
@@ -60,24 +57,22 @@ class Game extends Component {
       this.setState({ timer: true });
       this.startTime();
     }
-    const { gameover } = this.props;
-    if (gameover) {
-      return;
+    if (!this.props.gameover) {
+      this._open(x, y);
     }
-    this._open(x, y);
   };
 
   handleRightClickCell = (x, y) => {
-    if (this.props.gameover) {
-      return;
+    if (!this.props.gameover) {
+      this._toggleFlag(x, y);
     }
-    this._toggleFlag(x, y);
   };
 
   _open(x, y) {
     const data = [].concat(this.state.data);
     const { boardWidth, boardHeight } = config[this.props.level];
     if (!data[x][y].open) {
+      window.openCount++;
       let bombCount = 0;
       for (let i = x - 1; i <= x + 1; i++) {
         for (let j = y - 1; j <= y + 1; j++) {
@@ -97,25 +92,22 @@ class Game extends Component {
       }
       data[x][y] = Object.assign({}, data[x][y], {
         open: true,
-        bombCount: bombCount
+        bombCount
       });
       this.setState({ data });
       if (data[x][y].flagged) {
         this._toggleFlag(x, y);
       }
       if (data[x][y].bomb) {
-        this.props.appActions.gameover();
-        this._openAllMines();
-        this.setState({
-          win: false,
-          content: document.getElementById("timer").innerHTML
-        });
-        clearInterval(window.timer);
-        setTimeout(() => {
-          document.getElementById("openModal").click();
-        }, 1000);
+        this._endGame(false);
       }
-
+      if (
+        boardHeight * boardWidth - this.props.app.mines.length ==
+          window.openCount &&
+        this._checkwin()
+      ) {
+        this._endGame(true);
+      }
       if (bombCount === 0 && !data[x][y].bomb) {
         for (let i = x - 1; i <= x + 1; i++) {
           for (let j = y - 1; j <= y + 1; j++) {
@@ -135,21 +127,48 @@ class Game extends Component {
       }
     }
   }
+  _checkwin = () => {
+    let { data } = this.state;
+    for (let i = 0; i < data.length; i++) {
+      for (let j = 0; j < data[i].length; j++) {
+        const element = data[i][j];
+        if (!element.open && !element.bomb) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+  _endGame = isWin => {
+    this.props.appActions.gameover();
+    !isWin && this._openAllMines();
+    this.setState({
+      win: isWin,
+      content: document.getElementById("timer").innerHTML
+    });
+    clearInterval(window.timer);
+    setTimeout(() => {
+      document.getElementById("openModal").click();
+    }, 1000);
+  };
 
   _toggleFlag(x, y) {
     const data = [].concat(this.state.data);
     const { flagged } = data[x][y];
     data[x][y] = Object.assign({}, data[x][y], { flagged: !flagged });
     this.setState({ data });
-    this.props.appActions.toggleFlag(!flagged);
   }
-
+  _openAllMines = () => {
+    let { mines } = this.props.app;
+    mines.forEach(pos => {
+      this._open(pos.x, pos.y);
+    });
+  };
   startTime() {
     window.timer = setInterval(() => {
       this.setState({ timeSecond: this.state.timeSecond + 1 });
     }, 1000);
   }
-
   formatTime = timeSecond => {
     let sec = "00",
       min = "00",
@@ -167,17 +186,10 @@ class Game extends Component {
     }
     return `${hour}:${min}:${sec}`;
   };
-  _openAllMines = () => {
-    let { mines } = this.props.app;
-    mines.forEach(pos => {
-      this._open(pos.x, pos.y);
-    });
-  };
 
   render() {
     const { data, content = "", win, timeSecond = 0 } = this.state;
     const { loading } = this.props;
-
     return (
       <div className="container text-center">
         <Modal
